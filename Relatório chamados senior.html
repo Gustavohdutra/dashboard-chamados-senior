@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acompanhamento de Chamados — ERP Mega</title>
+<style>
+  :root{
+    color-scheme: light;
+    --page:            #f4f5f9;
+    --surface-1:       #ffffff;
+    --surface-2:       #f7f8fb;
+    --text-primary:    #1c1d2b;
+    --text-secondary:  #5b5d70;
+    --muted:           #8b8da0;
+    --gridline:        #ecedf3;
+    --border:          #e6e7ef;
+    --shadow:          0 1px 2px rgba(20,20,40,0.04), 0 6px 16px -10px rgba(30,20,80,0.10);
+
+    --brand:      #4338ca;
+    --brand-soft: #eeecfb;
+    --brand-2:    #7c3aed;
+
+    --good:        #16a34a;   --good-bg:     #e9f7ee;
+    --warning:     #f59e0b;   --warning-bg:  #fef3e2;
+    --serious:     #f97316;   --serious-bg:  #fef0e5;
+    --critical:    #ef4444;   --critical-bg: #fdeaea;
+    --info:        #3b82f6;   --info-bg:     #eaf1fe;
+    --gold:        #eab308;   --gold-bg:     #fdf7e0;
+    --teal:        #0d9488;   --teal-bg:     #e4f5f3;
+    --magenta:     #db2777;   --magenta-bg:  #fbe7f1;
+    --neutral-fill:#9aa0b4;   --neutral-bg:  #eef0f5;
+
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --page:            #0e0e14;
+      --surface-1:       #17171f;
+      --surface-2:       #1c1c26;
+      --text-primary:    #f2f2f7;
+      --text-secondary:  #b7b8c9;
+      --muted:           #82839a;
+      --gridline:        #2a2a36;
+      --border:          #2a2a36;
+      --shadow:          0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+      --brand:      #8b7cf0;
+      --brand-soft: #241f47;
+      --good-bg:     #123320; --warning-bg:#3a2c10; --serious-bg:#3a2412; --critical-bg:#3a1618;
+      --info-bg:#132540; --gold-bg:#332a0c; --teal-bg:#0f2b28; --magenta-bg:#3a1428; --neutral-bg:#25262f;
+    }
+  }
+  :root[data-theme="dark"]{
+      color-scheme: dark;
+      --page:            #0e0e14;
+      --surface-1:       #17171f;
+      --surface-2:       #1c1c26;
+      --text-primary:    #f2f2f7;
+      --text-secondary:  #b7b8c9;
+      --muted:           #82839a;
+      --gridline:        #2a2a36;
+      --border:          #2a2a36;
+      --shadow:          0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+      --brand:      #8b7cf0;
+      --brand-soft: #241f47;
+      --good-bg:     #123320; --warning-bg:#3a2c10; --serious-bg:#3a2412; --critical-bg:#3a1618;
+      --info-bg:#132540; --gold-bg:#332a0c; --teal-bg:#0f2b28; --magenta-bg:#3a1428; --neutral-bg:#25262f;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--page); color:var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing:antialiased; font-size:13px;
+  }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; animation:none !important; } }
+
+  .wrap{ max-width:1560px; margin:0 auto; padding:16px 20px 40px; }
+
+  /* ---------- Header / filter bar ---------- */
+  header{
+    background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-lg);
+    padding:14px 20px; display:flex; flex-direction:column; gap:14px;
+    box-shadow:var(--shadow); margin-bottom:14px;
+  }
+  .header-top{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+  .brand{ display:flex; align-items:center; gap:10px; margin-right:6px; }
+  .brand .mark{ width:36px; height:36px; border-radius:10px; background:var(--brand); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; flex-shrink:0; }
+  .brand h1{ margin:0; font-size:19px; font-weight:800; letter-spacing:-0.3px; }
+  .brand p{ margin:1px 0 0; font-size:11.5px; color:var(--muted); font-weight:600; }
+
+  .filters{ display:flex; align-items:flex-end; gap:10px 14px; flex-wrap:wrap; padding-top:12px; border-top:1px solid var(--border); }
+  .ffield{ display:flex; flex-direction:column; gap:4px; flex:1 1 130px; min-width:120px; }
+  .ffield-periodo{ flex:1 1 220px; min-width:210px; }
+  .ffield-reset{ flex:0 0 auto; min-width:0; }
+  .ffield label{ font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.4px; padding-left:2px; }
+  .fcontrol{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:7px 10px; display:flex; align-items:center; gap:6px; font-size:12px; height:34px;
+  }
+  .fcontrol select, .fcontrol input[type="date"]{
+    border:none; background:transparent; color:var(--text-primary); font-size:12px; outline:none; font-family:inherit; cursor:pointer; width:100%;
+  }
+  .fcontrol select option{ background:var(--surface-1); color:var(--text-primary); }
+  .fcontrol input[type="date"]{ width:100px; cursor:default; font-variant-numeric: tabular-nums; }
+  .fcontrol .sep{ color:var(--muted); }
+
+  .update-badge{
+    margin-left:auto; display:flex; align-items:center; gap:8px; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:999px; padding:8px 14px; font-size:11px; color:var(--text-secondary); white-space:nowrap;
+  }
+  .update-badge b{ color:var(--text-primary); display:block; font-size:12px; }
+  #themeToggle{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text-primary);
+    border-radius:999px; padding:8px 12px; font-size:11.5px; cursor:pointer; font-weight:600; flex-shrink:0;
+  }
+  #themeToggle:hover{ background:var(--brand-soft); }
+
+  /* ---------- KPI row ---------- */
+  .kpi-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+  .kpi{
+    background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-md);
+    padding:12px 14px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:6px;
+  }
+  .kpi .top{ display:flex; align-items:center; gap:10px; }
+  .kpi .icon{
+    width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    font-size:15px; flex-shrink:0;
+  }
+  .kpi .value{ font-size:21px; font-weight:800; letter-spacing:-0.4px; line-height:1; }
+  .kpi .label{ font-size:11px; color:var(--text-secondary); font-weight:700; }
+  .kpi .sub{ font-size:10.5px; color:var(--muted); padding-left:42px; }
+
+  /* ---------- Generic card / grid rows ---------- */
+  .row{ display:grid; gap:12px; margin-bottom:12px; }
+  .row-4{ grid-template-columns:repeat(4,1fr); }
+  .row-3{ grid-template-columns:repeat(3,1fr); }
+  .row-2{ grid-template-columns:repeat(2,1fr); }
+  .row-tables{ grid-template-columns: 1.1fr 1.1fr 2.2fr 1.1fr; }
+
+  .card{
+    background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-lg);
+    padding:16px 18px; box-shadow:var(--shadow); min-width:0;
+  }
+  .card h3{ margin:0 0 2px; font-size:13px; font-weight:800; }
+  .card .hint{ font-size:10.5px; color:var(--muted); margin-bottom:12px; }
+
+  /* ---------- Donut + legend ---------- */
+  .donut-wrap{ display:flex; align-items:center; gap:16px; }
+  .legend-col{ display:flex; flex-direction:column; gap:9px; flex:1; min-width:0; }
+  .legend-item{ display:flex; align-items:center; gap:8px; font-size:11.5px; }
+  .legend-item .sw{ width:9px; height:9px; border-radius:3px; flex-shrink:0; }
+  .legend-item .name{ font-weight:700; flex:1; }
+  .legend-item .n{ font-weight:800; font-variant-numeric: tabular-nums; }
+  .legend-item .pct{ color:var(--muted); font-size:10.5px; width:38px; text-align:right; }
+
+  /* ---------- Bars ---------- */
+  .bars{ display:flex; flex-direction:column; gap:9px; }
+  .barrow{ display:flex; align-items:center; gap:8px; }
+  .barrow .lbl{ width:118px; flex-shrink:0; font-size:11px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .barrow .track{ flex:1; height:12px; background:var(--gridline); border-radius:6px; overflow:hidden; }
+  .barrow .fill{ height:100%; border-radius:6px; transition:width .45s ease; }
+  .barrow .val{ width:44px; text-align:right; font-size:11.5px; font-weight:800; font-variant-numeric: tabular-nums; flex-shrink:0; }
+
+  /* ---------- Vertical bar chart (processo) ---------- */
+  .vbars{ display:flex; align-items:flex-end; gap:10px; height:150px; padding-top:18px; }
+  .vbar-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:6px; min-width:0; }
+  .vbar-stack{ width:100%; max-width:40px; flex:1; display:flex; align-items:flex-end; justify-content:center; }
+  .vbar{ width:100%; border-radius:6px 6px 2px 2px; background:var(--brand); position:relative; transition:height .45s ease; }
+  .vbar .vval{ position:absolute; top:-18px; left:0; right:0; text-align:center; font-size:11px; font-weight:800; }
+  .vbar-label{ font-size:10px; color:var(--muted); text-align:center; line-height:1.25; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* ---------- Trend area chart ---------- */
+  .trend-svg{ width:100%; height:150px; display:block; cursor:crosshair; }
+  .trend-caption{ display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-top:4px; }
+  .trend-tooltip{
+    position:absolute; display:none; pointer-events:none; z-index:20; transform:translate(-50%,-100%);
+    background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:6px 10px; font-size:11px; color:var(--text-secondary); box-shadow:var(--shadow); white-space:nowrap;
+  }
+  .trend-tooltip b{ display:block; font-size:12px; color:var(--text-primary); margin-bottom:2px; }
+
+  /* ---------- Gauge ---------- */
+  .gauge-wrap{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .gauge-labels{ display:flex; justify-content:space-between; width:150px; font-size:10px; color:var(--muted); margin-top:-6px; }
+  .gauge-stats{ width:100%; display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+  .gauge-stat{ background:var(--surface-2); border-radius:var(--radius-sm); padding:8px 10px; text-align:center; }
+  .gauge-stat .n{ font-size:16px; font-weight:800; }
+  .gauge-stat .l{ font-size:10px; color:var(--muted); font-weight:600; }
+
+  /* ---------- Tables ---------- */
+  table.mini{ width:100%; border-collapse:collapse; font-size:11.5px; }
+  table.mini th{ text-align:left; padding:6px 4px; color:var(--muted); font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:0.3px; border-bottom:1px solid var(--border); }
+  table.mini td{ padding:7px 4px; border-bottom:1px solid var(--border); }
+  table.mini tr:last-child td{ border-bottom:none; }
+  table.mini td.num, table.mini th.num{ text-align:right; font-variant-numeric: tabular-nums; }
+  table.mini tr.total-row td{ font-weight:800; border-top:1px solid var(--border); border-bottom:none; }
+
+  .table-scroll{ overflow-x:auto; }
+  table.wide{ width:100%; border-collapse:collapse; font-size:11.5px; min-width:640px; }
+  table.wide th{ text-align:left; padding:7px 8px; color:var(--muted); font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:0.3px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  table.wide td{ padding:8px 8px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  table.wide tr:last-child td{ border-bottom:none; }
+  table.wide tr:hover{ background:var(--surface-2); }
+
+  .pill{ display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; font-size:10.5px; font-weight:800; white-space:nowrap; }
+  .pill .dot{ width:6px; height:6px; border-radius:50%; }
+
+  .alert-bar{
+    margin-top:12px; display:flex; align-items:center; gap:10px; background:var(--serious-bg); border:1px solid rgba(249,115,22,0.28);
+    border-radius:var(--radius-sm); padding:9px 14px; font-size:11.5px; color:var(--text-primary);
+  }
+  .alert-bar .ic{ font-size:15px; flex-shrink:0; }
+  .alert-bar b{ font-weight:800; }
+  .alert-bar a{ margin-left:auto; color:var(--brand); font-weight:700; text-decoration:none; cursor:pointer; flex-shrink:0; }
+  .alert-bar a:hover{ text-decoration:underline; }
+  .alert-none{ margin-top:12px; display:flex; align-items:center; gap:8px; color:var(--good); font-size:11.5px; font-weight:700; background:var(--good-bg); border-radius:var(--radius-sm); padding:9px 14px; }
+
+  tr.flash td{ animation:flashRow 1.6s ease; }
+  @keyframes flashRow{ 0%{ background:var(--warning-bg);} 100%{ background:transparent; } }
+
+  /* ---------- Indicadores de tempo 2x2 ---------- */
+  .grid2x2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .stat-tile{ background:var(--surface-2); border-radius:var(--radius-sm); padding:12px; text-align:center; }
+  .stat-tile .n{ font-size:19px; font-weight:800; }
+  .stat-tile .l{ font-size:10px; color:var(--muted); font-weight:700; margin-top:2px; }
+
+  /* ---------- Insights ---------- */
+  .insights-card{ display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+  .insights-card .bulb{ font-size:18px; flex-shrink:0; }
+  .insights-card h3{ margin:0; white-space:nowrap; }
+  .insight-list{ display:flex; gap:22px; flex-wrap:wrap; flex:1; }
+  .insight-item{ flex:1; min-width:190px; font-size:11.5px; color:var(--text-secondary); line-height:1.5; padding-left:12px; border-left:2px solid var(--brand-soft); }
+  .insight-item b{ color:var(--text-primary); }
+
+  /* ---------- Collapsible full list ---------- */
+  details.full-list{ background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:16px 18px; }
+  details.full-list > summary{ cursor:pointer; font-weight:800; font-size:13px; list-style:none; display:flex; align-items:center; gap:8px; }
+  details.full-list > summary::-webkit-details-marker{ display:none; }
+  details.full-list > summary .chev{ transition:transform .2s ease; color:var(--muted); font-size:11px; }
+  details.full-list[open] > summary .chev{ transform:rotate(90deg); }
+  .full-list-body{ margin-top:14px; }
+  .full-filters{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+  .search-box{ display:flex; align-items:center; gap:8px; background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:8px 14px; flex:1; min-width:220px; }
+  .search-box input{ border:none; outline:none; background:transparent; color:var(--text-primary); font-size:12px; width:100%; }
+  select.filter-select{ background:var(--surface-2); border:1px solid var(--border); color:var(--text-primary); border-radius:999px; padding:8px 12px; font-size:11.5px; cursor:pointer; outline:none; }
+  .chip-count{ font-size:11px; color:var(--muted); margin-left:auto; }
+  thead th[data-key]{ cursor:pointer; user-select:none; }
+  thead th[data-key]:hover{ color:var(--text-primary); }
+  .no-subject{ color:var(--muted); font-style:italic; }
+  .fallback{ font-size:10px; color:var(--muted); display:block; }
+
+  footer{ margin-top:16px; text-align:center; font-size:10.5px; color:var(--muted); }
+
+  @media (max-width:1400px){
+    .row-4{ grid-template-columns:repeat(2,1fr); }
+    .row-3{ grid-template-columns:repeat(2,1fr); }
+    .row-tables{ grid-template-columns:1fr 1fr; }
+    .row-tables > :nth-child(3){ grid-column: span 2; }
+  }
+  @media (max-width:760px){
+    .kpi-grid{ grid-template-columns:repeat(2,1fr); }
+    .row-2{ grid-template-columns:1fr; }
+    .row-3{ grid-template-columns:1fr; }
+    .row-4{ grid-template-columns:1fr; }
+    .row-tables{ grid-template-columns:1fr; }
+    .row-tables > :nth-child(3){ grid-column: span 1; }
+    .update-badge{ margin-left:0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="header-top">
+      <div class="brand">
+        <div class="mark">S</div>
+        <div>
+          <h1>Acompanhamento de Chamados</h1>
+          <p>ERP Mega · TK Soluções de Engenharia</p>
+        </div>
+      </div>
+      <div class="update-badge">
+        🔄 <span>Última atualização<br><b id="lastUpdate"></b></span>
+      </div>
+      <button id="themeToggle" onclick="toggleTheme()">🌙 Escuro</button>
+    </div>
+
+    <div class="filters">
+      <div class="ffield ffield-periodo">
+        <label>Período</label>
+        <div class="fcontrol">📅 <input type="date" id="fDateFrom"> <span class="sep">–</span> <input type="date" id="fDateTo"></div>
+      </div>
+      <div class="ffield">
+        <label>Status</label>
+        <div class="fcontrol"><select id="fStatus"><option value="">Todos</option></select></div>
+      </div>
+      <div class="ffield">
+        <label>Processo</label>
+        <div class="fcontrol"><select id="fProcesso"><option value="">Todos</option></select></div>
+      </div>
+      <div class="ffield">
+        <label>Módulo</label>
+        <div class="fcontrol"><select id="fModulo"><option value="">Todos</option></select></div>
+      </div>
+      <div class="ffield">
+        <label>Responsável</label>
+        <div class="fcontrol"><select id="fResponsavel"><option value="">Todos</option></select></div>
+      </div>
+      <div class="ffield">
+        <label>Solicitante</label>
+        <div class="fcontrol"><select id="fSolicitante"><option value="">Todos</option></select></div>
+      </div>
+      <div class="ffield ffield-reset">
+        <label>&nbsp;</label>
+        <div class="fcontrol" id="btnReset" style="cursor:pointer;">↺ Limpar filtros</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- KPI row -->
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <!-- Row 2: status / prioridade / processo / modulo -->
+  <div class="row row-4">
+    <div class="card">
+      <h3>Chamados por Status do Ticket</h3>
+      <div class="hint">Distribuição geral no período filtrado</div>
+      <div class="donut-wrap">
+        <svg id="statusDonut" width="120" height="120" viewBox="0 0 120 120"></svg>
+        <div class="legend-col" id="statusLegend"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Chamados por Prioridade</h3>
+      <div class="hint">Classificação de urgência</div>
+      <div class="bars" id="prioBars"></div>
+    </div>
+    <div class="card">
+      <h3>Chamados por Processo (Top 5)</h3>
+      <div class="hint">Áreas de negócio com maior volume</div>
+      <div class="vbars" id="processoVBars"></div>
+    </div>
+    <div class="card">
+      <h3>Chamados por Módulo (Top 5)</h3>
+      <div class="hint">Módulos do sistema mais acionados</div>
+      <div class="bars" id="moduloBars"></div>
+    </div>
+  </div>
+
+  <!-- Row 3: trend / natureza -->
+  <div class="row row-3">
+    <div class="card" style="position:relative;">
+      <h3>Chamados por Período de Abertura</h3>
+      <div class="hint">Volume de abertura ao longo do tempo</div>
+      <svg class="trend-svg" id="trendSvg" viewBox="0 0 300 150" preserveAspectRatio="none"></svg>
+      <div class="trend-caption"><span id="trendMin"></span><span id="trendMax"></span></div>
+      <div class="trend-tooltip" id="trendTooltip"></div>
+    </div>
+    <div class="card">
+      <h3>Chamados por Natureza</h3>
+      <div class="hint">Classificação técnica do chamado</div>
+      <div class="bars" id="naturezaBars"></div>
+    </div>
+    <div class="card">
+      <h3>Status dos Chamados Abertos — Dados do Sênior</h3>
+      <div class="hint">Chamados com STATUS = Aberto, detalhados pela coluna Status do Ticket</div>
+      <div class="donut-wrap">
+        <svg id="statusAbertosDonut" width="120" height="120" viewBox="0 0 120 120"></svg>
+        <div class="legend-col" id="statusAbertosLegend"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 4: solicitantes / responsaveis / abertos / tempo -->
+  <div class="row row-tables">
+    <div class="card">
+      <h3>Solicitantes (Top 5)</h3>
+      <div class="hint">Quem mais abre chamados</div>
+      <table class="mini" id="tblSolicitantes"></table>
+    </div>
+    <div class="card">
+      <h3>Responsáveis (Top 5)</h3>
+      <div class="hint">Analistas Senior com mais chamados</div>
+      <table class="mini" id="tblResponsaveis"></table>
+    </div>
+    <div class="card">
+      <h3>Radar de Risco — Chamados Abertos</h3>
+      <div class="hint">Ordenado por urgência: SLA vencido, prioridade e tempo em aberto</div>
+      <table class="mini" id="tblRiscoAbertos">
+        <thead><tr><th>Ticket</th><th>Prioridade</th><th>SLA</th><th class="num">Tempo Aberto</th><th>Responsável</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div id="alertSlot"></div>
+    </div>
+    <div class="card">
+      <h3>Indicadores de Tempo (horas)</h3>
+      <div class="hint">Atendimento e espera</div>
+      <div class="grid2x2" id="tempoGrid"></div>
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <div class="row">
+    <div class="card insights-card">
+      <span class="bulb">💡</span>
+      <h3>Insights principais</h3>
+      <div class="insight-list" id="insightsList"></div>
+    </div>
+  </div>
+
+  <!-- Full searchable list -->
+  <details class="full-list">
+    <summary><span class="chev">▶</span> Lista completa de chamados <span id="fullListCount" style="font-weight:600;color:var(--muted);font-size:11px;"></span></summary>
+    <div class="full-list-body">
+      <div class="full-filters">
+        <div class="search-box">🔎 <input type="text" id="searchInput" placeholder="Buscar por ticket, assunto, solicitante ou responsável..."></div>
+        <select id="filterStatusFull" class="filter-select"><option value="">Status: todos</option></select>
+        <span class="chip-count" id="tableCount"></span>
+      </div>
+      <div class="table-scroll">
+        <table class="wide" id="fullTable">
+          <thead>
+            <tr>
+              <th data-key="ticket">Ticket</th>
+              <th data-key="assunto">Assunto</th>
+              <th data-key="status">Status</th>
+              <th data-key="prioridade">Prioridade</th>
+              <th data-key="processo">Processo</th>
+              <th data-key="modulo">Módulo</th>
+              <th data-key="solicitante">Solicitante</th>
+              <th data-key="responsavel">Responsável</th>
+              <th data-key="dataAbertura">Abertura</th>
+              <th data-key="dataFechamento">Fechamento</th>
+              <th data-key="diasAberto">Tempo Aberto</th>
+              <th data-key="sla">SLA</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <footer>
+    Painel gerado a partir de "Chamados Consolidado.xlsx" (aba "Chamados") — TK Soluções de Engenharia · Suporte Senior/Mega.
+    Assunto indisponível na exportação padrão da Senior (68 de 91 registros) — preenchido manualmente quando possível.
+  </footer>
+</div>
+
+<script>
+const TICKETS = [{"ticket":"1389254","assunto":"Re: Erro ao imprimir DANFE - JRException: Error executing SQL statement for NFE_DANFE","processo":"Empresarial | Nota Fiscal Eletrônica - NFe","modulo":"Emissão da NF-e","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Resolvido","statusGeral":"Aberto","dataAbertura":"2026-08-19","dataFechamento":null,"sla":"Atendido","esforcoHoras":0.03,"duracaoHoras":0.75,"tempoInicioHoras":0.75,"horasAguardando":0.0},{"ticket":"1388189","assunto":"Como realizar transferência bancária entre empresas diferentes?","processo":"Empresarial | Financeiro","modulo":"Movimento Financeiro","natureza":"Requisição (Dúvida)","solicitante":"Elaine Silva","responsavel":"Diego Matos","prioridade":"baixa","status":"Pendente","statusGeral":"Aberto","dataAbertura":"2026-08-19","dataFechamento":null,"sla":"Pausado","esforcoHoras":0.08,"duracaoHoras":4.77,"tempoInicioHoras":4.77,"horasAguardando":0.0},{"ticket":"1388133","assunto":"Emissão de Relatórios - Listagem - Avaliaçao de entrega de fornecedores","processo":"Empresarial | Materiais","modulo":"Relatórios","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Resolvido","statusGeral":"Aberto","dataAbertura":"2026-08-19","dataFechamento":null,"sla":"Atendido","esforcoHoras":0.56,"duracaoHoras":2.35,"tempoInicioHoras":1.4,"horasAguardando":0.4},{"ticket":"1388086","assunto":"Emissão de Relatórios - Controle de Estoque - Inventário - Avisos de Laçamentos","processo":"Empresarial | Materiais","modulo":"Inventário","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Resolvido","statusGeral":"Aberto","dataAbertura":"2026-08-19","dataFechamento":null,"sla":"Atendido","esforcoHoras":0.61,"duracaoHoras":2.5,"tempoInicioHoras":1.57,"horasAguardando":0.43},{"ticket":"1388019","assunto":"Relatório - Listagem de Pedido de compras (erro)","processo":"Empresarial | Materiais","modulo":"Relatórios","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Resolvido","statusGeral":"Aberto","dataAbertura":"2026-08-19","dataFechamento":null,"sla":"Atendido","esforcoHoras":0.24,"duracaoHoras":1.75,"tempoInicioHoras":1.72,"horasAguardando":0.0},{"ticket":"1387964","assunto":"Emissão de Relatórios - Materiais - Em branco","processo":"Empresarial | Materiais","modulo":"Relatórios","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Resolvido","statusGeral":"Aberto","dataAbertura":"2026-08-19","dataFechamento":null,"sla":"Atendido","esforcoHoras":0.26,"duracaoHoras":2.83,"tempoInicioHoras":1.93,"horasAguardando":0.0},{"ticket":"1386632","assunto":"Erro Emissão de Relatório - Itens Solicitados por projetos","processo":"Empresarial | Materiais","modulo":"Acesso Materiais","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Resolvido","statusGeral":"Aberto","dataAbertura":"2026-08-18","dataFechamento":null,"sla":"Atendido","esforcoHoras":0.1,"duracaoHoras":0.17,"tempoInicioHoras":0.15,"horasAguardando":0.0},{"ticket":"1386615","assunto":"Erro no processo de aprovação","processo":"Portal de Aprovações/Approvo","modulo":"Aprovações Contrato de Empreiteiro","natureza":"Incidente","solicitante":"Paulo Oliveira","responsavel":"Não atribuído","prioridade":"baixa","status":"Aberto","statusGeral":"Aberto","dataAbertura":"2026-08-18","dataFechamento":null,"sla":"24/08/2026, 11:28","esforcoHoras":0.14,"duracaoHoras":0.07,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1382620","assunto":"Erro Emissão de Relatório - Solicitação de Material","processo":"Empresarial | Materiais","modulo":"Relatórios","natureza":null,"solicitante":"Romulo Pereira","responsavel":"Mega Delivery","prioridade":"normal","status":"Resolvido","statusGeral":"Aberto","dataAbertura":"2026-08-14","dataFechamento":null,"sla":null,"esforcoHoras":0.0,"duracaoHoras":1.15,"tempoInicioHoras":1.15,"horasAguardando":0.0},{"ticket":"1382478","assunto":"Gerenciados CTe","processo":"Empresarial | Materiais","modulo":"Gerenciamento de NF-e","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Resolvido","statusGeral":"Aberto","dataAbertura":"2026-08-14","dataFechamento":null,"sla":"Atendido","esforcoHoras":0.02,"duracaoHoras":0.25,"tempoInicioHoras":0.0,"horasAguardando":4.05},{"ticket":"1381789","assunto":"Erro Emissão de Relatório - Solicitação de Material","processo":"Empresarial | Materiais","modulo":"Relatórios","natureza":"Erro Liberado","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Resolvido","statusGeral":"Aberto","dataAbertura":"2026-08-14","dataFechamento":null,"sla":"Atendido","esforcoHoras":0.02,"duracaoHoras":2.52,"tempoInicioHoras":2.53,"horasAguardando":0.0},{"ticket":"1376884","assunto":"Diferencial de alíquota impactando pedido - Filial 300","processo":"Empresarial | Materiais","modulo":"Pedidos de Compra","natureza":"Incidente","solicitante":"Elaine Silva","responsavel":"Bruna Costa","prioridade":"baixa","status":"Resolvido","statusGeral":"Aberto","dataAbertura":"2026-08-12","dataFechamento":null,"sla":"Atendido","esforcoHoras":2.13,"duracaoHoras":18.13,"tempoInicioHoras":0.43,"horasAguardando":2.28},{"ticket":"1376829","assunto":"Ação NFSe bloqueada Filial 300","processo":"Empresarial | Nota Fiscal de Serviço Eletrônica - NFSe","modulo":"NFSe Comunicação - Envio/Retorno Xml","natureza":"Incidente","solicitante":"Elaine Silva","responsavel":"Bruna Costa","prioridade":"baixa","status":"Resolvido","statusGeral":"Aberto","dataAbertura":"2026-08-12","dataFechamento":null,"sla":"Atendido","esforcoHoras":0.08,"duracaoHoras":1.13,"tempoInicioHoras":1.12,"horasAguardando":0.0},{"ticket":"1373451","assunto":"NF de materiais com retenção de tributos federais - Filial 200","processo":"Empresarial | Financeiro","modulo":"Baixa no Contas a Pagar","natureza":"Incidente","solicitante":"Elaine Silva","responsavel":"Bruna Savioli","prioridade":"baixa","status":"Aberto","statusGeral":"Aberto","dataAbertura":"2026-08-10","dataFechamento":null,"sla":"Vencido","esforcoHoras":0.57,"duracaoHoras":4.23,"tempoInicioHoras":4.25,"horasAguardando":0.0},{"ticket":"1372474","assunto":"Erro em emissão NF de serviços, código de serviços 1 - Filial 300 - NFs 32 e 33","processo":"Empresarial | Nota Fiscal de Serviço Eletrônica - NFSe","modulo":"Emissão da NFS-e","natureza":"Incidente","solicitante":"Elaine Silva","responsavel":"Bruna Costa","prioridade":"baixa","status":"Resolvido","statusGeral":"Aberto","dataAbertura":"2026-08-10","dataFechamento":null,"sla":"Atendido","esforcoHoras":4.42,"duracaoHoras":6.33,"tempoInicioHoras":0.62,"horasAguardando":0.13},{"ticket":"1361039","assunto":"CONTRATOS DAS FILIAIS TKT/TKM/TKE SEM APROVAÇÃO FISCAL","processo":"Construção | Contratos de Empreiteiros","modulo":"Contratos","natureza":"Incidente","solicitante":"Lázaro Sarmento","responsavel":"Mateus Pozetti","prioridade":"baixa","status":"Resolvido","statusGeral":"Aberto","dataAbertura":"2026-08-01","dataFechamento":null,"sla":"Atendido","esforcoHoras":1.09,"duracaoHoras":3.08,"tempoInicioHoras":1.35,"horasAguardando":43.98},{"ticket":"1348913","assunto":"Apropriação da FOLHA de Pagamento - ADO","processo":"Construção | Administração de Obras","modulo":"ADO","natureza":"Erro","solicitante":"Gleiser Costa","responsavel":"Deivid Romao","prioridade":"baixa","status":"Aberto","statusGeral":"Aberto","dataAbertura":"2026-07-24","dataFechamento":null,"sla":"21/09/2026, 10:33","esforcoHoras":4.53,"duracaoHoras":158.85,"tempoInicioHoras":0.38,"horasAguardando":0.33},{"ticket":"1336336","assunto":"Base de cálculo incorreta em nota fiscal de importação","processo":"Empresarial | Nota Fiscal Eletrônica - NFe","modulo":"Emissão da NF-e","natureza":"Erro","solicitante":"Elaine Silva","responsavel":"Philippe Abboud","prioridade":"baixa","status":"Em espera","statusGeral":"Aberto","dataAbertura":"2026-07-16","dataFechamento":null,"sla":"11/09/2026, 10:48","esforcoHoras":3.52,"duracaoHoras":201.45,"tempoInicioHoras":0.18,"horasAguardando":2.55},{"ticket":"1385512","assunto":"Arquivo MegaCom_Sefaz.dll não encontrado no módulo NF-e","processo":"Empresarial | Comunicador SEFAZ","modulo":"Comunicador SEFAZ","natureza":"Incidente","solicitante":"Paulo Oliveira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-18","dataFechamento":"2026-08-18","sla":"Atendido","esforcoHoras":0.58,"duracaoHoras":2.4,"tempoInicioHoras":0.15,"horasAguardando":0.0},{"ticket":"1380046","assunto":null,"processo":"Empresarial | Contabilidade","modulo":"Relatório - Razão","natureza":"Incidente","solicitante":"Elaine Silva","responsavel":"Diego Matos","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-13","dataFechamento":"2026-08-14","sla":"Atendido","esforcoHoras":0.13,"duracaoHoras":8.5,"tempoInicioHoras":8.5,"horasAguardando":0.0},{"ticket":"1379646","assunto":null,"processo":"Empresarial | Contabilidade","modulo":"Relatório - Razão","natureza":"Incidente","solicitante":"Elaine Silva","responsavel":"Diego Matos","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-13","dataFechamento":"2026-08-14","sla":"Atendido","esforcoHoras":0.63,"duracaoHoras":8.95,"tempoInicioHoras":7.12,"horasAguardando":0.0},{"ticket":"1375951","assunto":null,"processo":"Empresarial | Materiais","modulo":"Pedidos de Compra","natureza":"Serviço","solicitante":"Romulo Pereira","responsavel":"Luis Giani","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-11","dataFechamento":"2026-08-13","sla":null,"esforcoHoras":0.18,"duracaoHoras":0.7,"tempoInicioHoras":0.22,"horasAguardando":11.45},{"ticket":"1374791","assunto":"Sistema (travado) - Urgente","processo":"Empresarial | Global","modulo":"Travamento server","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Matos","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-11","dataFechamento":"2026-08-19","sla":"Atendido","esforcoHoras":0.06,"duracaoHoras":0.48,"tempoInicioHoras":0.48,"horasAguardando":0.0},{"ticket":"1373863","assunto":"Atualização de Versão + BUILD - TK SOLUCOES DE ENGENHARIA LTDA","processo":"Empresarial | Mega Atualizador","modulo":"Mega Atualizador","natureza":null,"solicitante":"Romulo Pereira","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-10","dataFechamento":"2026-08-18","sla":null,"esforcoHoras":0.0,"duracaoHoras":1.18,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1373086","assunto":"NFs de materiais com status em processamento desde 31/07/2026 - Filial 301","processo":"Empresarial | Materiais","modulo":"Aviso de Recebimento","natureza":"Incidente","solicitante":"Elaine Silva","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-10","dataFechamento":"2026-08-18","sla":"Atendido","esforcoHoras":0.37,"duracaoHoras":2.07,"tempoInicioHoras":1.5,"horasAguardando":0.0},{"ticket":"1372855","assunto":null,"processo":"Empresarial | Nota Fiscal Eletrônica - NFe","modulo":"NFe Comunicação - Envio/Retorno Xml","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-10","dataFechamento":"2026-08-18","sla":"Atendido","esforcoHoras":0.14,"duracaoHoras":0.28,"tempoInicioHoras":0.28,"horasAguardando":0.0},{"ticket":"1372058","assunto":null,"processo":"Construção | Administração de Obras","modulo":"Apropriações","natureza":null,"solicitante":"Romulo Pereira","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-07","dataFechamento":"2026-08-17","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.13,"tempoInicioHoras":0.13,"horasAguardando":0.0},{"ticket":"1371676","assunto":null,"processo":"Empresarial | Nota Fiscal de Serviço Eletrônica - NFSe","modulo":"Emissão da NFS-e","natureza":"Incidente","solicitante":"Elaine Silva","responsavel":"Erich Honorio","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-07","dataFechamento":"2026-08-13","sla":"Atendido","esforcoHoras":0.01,"duracaoHoras":2.02,"tempoInicioHoras":2.02,"horasAguardando":0.0},{"ticket":"1369435","assunto":null,"processo":"Empresarial | Materiais","modulo":"Relatórios","natureza":"Incidente","solicitante":"Diogo Silveira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-06","dataFechamento":"2026-08-17","sla":"Atendido","esforcoHoras":0.17,"duracaoHoras":9.03,"tempoInicioHoras":9.03,"horasAguardando":0.0},{"ticket":"1369243","assunto":null,"processo":"Empresarial | Global","modulo":"Acesso","natureza":"Erro Liberado","solicitante":"Romulo Pereira","responsavel":"Debora Ayres","prioridade":"alta","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-06","dataFechamento":"2026-08-14","sla":"Atendido","esforcoHoras":0.05,"duracaoHoras":0.22,"tempoInicioHoras":0.22,"horasAguardando":0.0},{"ticket":"1368781","assunto":null,"processo":"Empresarial | Mega Atualizador","modulo":"Mega Atualizador","natureza":null,"solicitante":"Paulo Oliveira","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-06","dataFechamento":"2026-08-14","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.0,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1365384","assunto":null,"processo":"Construção | Contratos de Empreiteiros","modulo":"Acesso","natureza":"Incidente","solicitante":"1093.enascimento","responsavel":"Enzo Silva","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-04","dataFechamento":"2026-08-12","sla":"Atendido","esforcoHoras":0.05,"duracaoHoras":0.17,"tempoInicioHoras":0.17,"horasAguardando":0.0},{"ticket":"1361022","assunto":null,"processo":"Empresarial | Contabilidade","modulo":"Integração Contabilidade","natureza":"Incidente","solicitante":"Elaine Silva","responsavel":"Diego Matos","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-08-01","dataFechamento":"2026-08-11","sla":"Atendido","esforcoHoras":0.18,"duracaoHoras":4.0,"tempoInicioHoras":4.0,"horasAguardando":0.0},{"ticket":"1360071","assunto":null,"processo":"Empresarial | Global","modulo":"Acesso","natureza":null,"solicitante":"Romulo Pereira","responsavel":"Ronan Pagni","prioridade":"urgente","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-31","dataFechamento":"2026-08-10","sla":null,"esforcoHoras":0.01,"duracaoHoras":0.3,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1359991","assunto":null,"processo":"Empresarial | Global","modulo":"Acesso","natureza":"Erro Liberado","solicitante":"Gustavo Dutra","responsavel":"Philippe Abboud","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-31","dataFechamento":"2026-08-05","sla":"Atendido","esforcoHoras":0.02,"duracaoHoras":0.48,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1359257","assunto":null,"processo":"Empresarial | Nota Fiscal Eletrônica - NFe","modulo":"NFe Comunicação - Envio/Retorno Xml","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-31","dataFechamento":"2026-08-10","sla":"Atendido","esforcoHoras":0.08,"duracaoHoras":0.27,"tempoInicioHoras":0.28,"horasAguardando":0.0},{"ticket":"1358715","assunto":null,"processo":"Construção | Contratos de Empreiteiros","modulo":"Documentos","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-30","dataFechamento":"2026-08-17","sla":"Atendido","esforcoHoras":0.08,"duracaoHoras":1.47,"tempoInicioHoras":0.35,"horasAguardando":20.55},{"ticket":"1358057","assunto":null,"processo":"Empresarial | Nota Fiscal de Serviço Eletrônica - NFSe","modulo":"Emissão da NFS-e","natureza":null,"solicitante":"Romulo Pereira","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-30","dataFechamento":"2026-08-07","sla":null,"esforcoHoras":0.0,"duracaoHoras":3.77,"tempoInicioHoras":3.77,"horasAguardando":0.0},{"ticket":"1357577","assunto":null,"processo":"Empresarial | Materiais","modulo":"Conhecimento de Fretes","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-30","dataFechamento":"2026-08-05","sla":"Atendido","esforcoHoras":0.01,"duracaoHoras":1.8,"tempoInicioHoras":1.8,"horasAguardando":0.0},{"ticket":"1353792","assunto":null,"processo":"Construção | Administração de Obras","modulo":"Remonta Repositório Financeiro","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Mateus Pozetti","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-28","dataFechamento":"2026-08-05","sla":"Atendido","esforcoHoras":0.15,"duracaoHoras":0.92,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1353589","assunto":"Apropriação folha de pagamento (erro associação projeto)","processo":"Construção | Administração de Obras","modulo":"Apropriações","natureza":"Erro","solicitante":"Romulo Pereira","responsavel":"Deivid Romao","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-28","dataFechamento":"2026-08-19","sla":"Atendido","esforcoHoras":5.28,"duracaoHoras":74.18,"tempoInicioHoras":37.5,"horasAguardando":0.0},{"ticket":"1350496","assunto":null,"processo":"Empresarial | Contabilidade","modulo":"Integração Contabilidade","natureza":"Requisição (Dúvida)","solicitante":"Elaine Silva","responsavel":"Gabriel Alier","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-25","dataFechamento":"2026-08-14","sla":"Vencido","esforcoHoras":0.13,"duracaoHoras":75.15,"tempoInicioHoras":75.15,"horasAguardando":0.0},{"ticket":"1345897","assunto":null,"processo":"Portal de Aprovações/Approvo","modulo":"Acesso Approvo","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-22","dataFechamento":"2026-07-29","sla":"Atendido","esforcoHoras":0.09,"duracaoHoras":11.35,"tempoInicioHoras":11.03,"horasAguardando":1.82},{"ticket":"1345834","assunto":null,"processo":"Empresarial | Materiais","modulo":"Pedidos de Compra","natureza":"Incidente","solicitante":"Elaine Silva","responsavel":"Bruna Savioli","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-22","dataFechamento":"2026-08-03","sla":"Atendido","esforcoHoras":0.71,"duracaoHoras":13.9,"tempoInicioHoras":0.32,"horasAguardando":0.37},{"ticket":"1345095","assunto":null,"processo":"Construção | Contratos de Empreiteiros","modulo":"Documentos","natureza":"Incidente","solicitante":"Lázaro Sarmento","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-22","dataFechamento":"2026-07-30","sla":"Atendido","esforcoHoras":0.24,"duracaoHoras":0.63,"tempoInicioHoras":0.63,"horasAguardando":0.0},{"ticket":"1343614","assunto":null,"processo":"Empresarial | Global","modulo":"Acesso","natureza":null,"solicitante":"Romulo Pereira","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-21","dataFechamento":"2026-07-29","sla":null,"esforcoHoras":0.0,"duracaoHoras":2.35,"tempoInicioHoras":2.35,"horasAguardando":0.0},{"ticket":"1343612","assunto":null,"processo":"Empresarial | Nota Fiscal de Serviço Eletrônica - NFSe","modulo":"Emissão da NFS-e","natureza":null,"solicitante":"Romulo Pereira","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-21","dataFechamento":"2026-07-29","sla":null,"esforcoHoras":0.0,"duracaoHoras":2.37,"tempoInicioHoras":2.37,"horasAguardando":0.0},{"ticket":"1343608","assunto":null,"processo":"Empresarial | Rotinas Básicas","modulo":"Acesso ao Mega","natureza":null,"solicitante":"Romulo Pereira","responsavel":"Ronan Pagni","prioridade":"urgente","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-21","dataFechamento":"2026-07-29","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.93,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1343605","assunto":null,"processo":"Empresarial | Nota Fiscal Eletrônica - NFe","modulo":"Emissão da NF-e","natureza":null,"solicitante":"Romulo Pereira","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-21","dataFechamento":"2026-07-29","sla":null,"esforcoHoras":0.0,"duracaoHoras":1.58,"tempoInicioHoras":1.6,"horasAguardando":0.0},{"ticket":"1343576","assunto":null,"processo":"Construção | Contratos de Empreiteiros","modulo":"Contratos","natureza":null,"solicitante":"Romulo Pereira","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-21","dataFechamento":"2026-07-29","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.73,"tempoInicioHoras":0.73,"horasAguardando":0.0},{"ticket":"1343438","assunto":null,"processo":"Empresarial | Nota Fiscal Eletrônica - NFe","modulo":"NFe Comunicação - Envio/Retorno Xml","natureza":"Incidente","solicitante":"Elaine Silva","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-21","dataFechamento":"2026-07-29","sla":"Atendido","esforcoHoras":0.42,"duracaoHoras":1.43,"tempoInicioHoras":0.53,"horasAguardando":0.08},{"ticket":"1342605","assunto":null,"processo":"Empresarial | Global","modulo":"Acesso","natureza":"Requisição (Dúvida)","solicitante":"Romulo Pereira","responsavel":"Leonardo Santanna","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-21","dataFechamento":"2026-07-23","sla":"Atendido","esforcoHoras":0.5,"duracaoHoras":9.22,"tempoInicioHoras":7.5,"horasAguardando":0.0},{"ticket":"1342483","assunto":null,"processo":"Empresarial | Materiais","modulo":"Conhecimento de Fretes","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-21","dataFechamento":"2026-07-29","sla":"Atendido","esforcoHoras":0.16,"duracaoHoras":1.62,"tempoInicioHoras":1.62,"horasAguardando":0.0},{"ticket":"1340948","assunto":null,"processo":"Construção | Administração de Obras","modulo":"Planejamento","natureza":"Incidente","solicitante":"Diogo Silveira","responsavel":"Philippe Abboud","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-20","dataFechamento":"2026-07-29","sla":"Atendido","esforcoHoras":0.09,"duracaoHoras":5.78,"tempoInicioHoras":0.07,"horasAguardando":0.08},{"ticket":"1340848","assunto":null,"processo":"Construção | Contratos de Empreiteiros","modulo":"Contratos","natureza":"Erro Liberado","solicitante":"Romulo Pereira","responsavel":"Nicolas Ferraz","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-20","dataFechamento":"2026-07-22","sla":"Atendido","esforcoHoras":0.74,"duracaoHoras":0.68,"tempoInicioHoras":0.43,"horasAguardando":0.05},{"ticket":"1338938","assunto":null,"processo":"Empresarial | Financeiro","modulo":"Contas a Pagar","natureza":"Erro","solicitante":"Romulo Pereira","responsavel":"Diego Matos","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-17","dataFechamento":"2026-07-31","sla":"Atendido","esforcoHoras":3.06,"duracaoHoras":29.67,"tempoInicioHoras":12.25,"horasAguardando":0.0},{"ticket":"1335351","assunto":null,"processo":"Empresarial | Nota Fiscal de Serviço Eletrônica - NFSe","modulo":"Emissão da NFS-e","natureza":"Erro","solicitante":"Elaine Silva","responsavel":"Bruna Costa","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-15","dataFechamento":"2026-08-06","sla":"Atendido","esforcoHoras":0.23,"duracaoHoras":88.35,"tempoInicioHoras":0.07,"horasAguardando":0.0},{"ticket":"1335040","assunto":null,"processo":"Empresarial | Rotinas Básicas","modulo":"Acesso ao Mega","natureza":"Erro Liberado","solicitante":"Diogo Silveira","responsavel":"Marcos Baraldi","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-15","dataFechamento":"2026-07-23","sla":"Atendido","esforcoHoras":0.05,"duracaoHoras":0.17,"tempoInicioHoras":0.17,"horasAguardando":0.0},{"ticket":"1332259","assunto":null,"processo":"Empresarial | Global","modulo":"Relatórios Gerais","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-14","dataFechamento":"2026-07-22","sla":"Atendido","esforcoHoras":0.34,"duracaoHoras":2.77,"tempoInicioHoras":0.82,"horasAguardando":0.0},{"ticket":"1331511","assunto":null,"processo":"Empresarial | Global","modulo":"Cadastros de Agentes","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Lucas Zamboni","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-13","dataFechamento":"2026-07-28","sla":"Atendido","esforcoHoras":4.47,"duracaoHoras":17.2,"tempoInicioHoras":10.87,"horasAguardando":0.0},{"ticket":"1330294","assunto":null,"processo":"Empresarial | Global","modulo":"Acesso","natureza":"Erro Liberado","solicitante":"Romulo Pereira","responsavel":"Marcos Baraldi","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-13","dataFechamento":"2026-07-21","sla":"Atendido","esforcoHoras":0.18,"duracaoHoras":0.48,"tempoInicioHoras":0.5,"horasAguardando":0.0},{"ticket":"1329154","assunto":null,"processo":"Empresarial | Nota Fiscal de Serviço Eletrônica - NFSe","modulo":"Emissão da NFS-e","natureza":"Erro Liberado","solicitante":"Romulo Pereira","responsavel":"Bruna Costa","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-10","dataFechamento":"2026-07-23","sla":"Atendido","esforcoHoras":6.46,"duracaoHoras":24.22,"tempoInicioHoras":1.4,"horasAguardando":0.1},{"ticket":"1329046","assunto":null,"processo":"Empresarial | Nota Fiscal Eletrônica - NFe","modulo":"Emissão da NF-e","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Mateus Pozetti","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-10","dataFechamento":"2026-07-13","sla":"Atendido","esforcoHoras":0.15,"duracaoHoras":9.98,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1328626","assunto":null,"processo":"Empresarial | Nota Fiscal Eletrônica - NFe","modulo":"Emissão da NF-e","natureza":"Erro","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-10","dataFechamento":"2026-07-24","sla":"Atendido","esforcoHoras":0.45,"duracaoHoras":39.43,"tempoInicioHoras":0.78,"horasAguardando":0.0},{"ticket":"1325081","assunto":null,"processo":"Empresarial | Global","modulo":"Parâmetros","natureza":"Serviço","solicitante":"Romulo Pereira","responsavel":"Luis Giani","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-08","dataFechamento":"2026-07-09","sla":null,"esforcoHoras":0.02,"duracaoHoras":3.73,"tempoInicioHoras":0.0,"horasAguardando":6.9},{"ticket":"1321929","assunto":null,"processo":"Empresarial | Global","modulo":"Cadastros de Agentes","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Leonardo Santanna","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-06","dataFechamento":"2026-07-14","sla":"Atendido","esforcoHoras":0.57,"duracaoHoras":1.93,"tempoInicioHoras":1.95,"horasAguardando":0.0},{"ticket":"1321676","assunto":null,"processo":"Empresarial | Mega Atualizador","modulo":"Mega Atualizador","natureza":null,"solicitante":"Paulo Oliveira","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-06","dataFechamento":"2026-07-14","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.0,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1321657","assunto":null,"processo":"Empresarial | Global","modulo":"Cadastros de Agentes","natureza":"Requisição (Dúvida)","solicitante":"Romulo Pereira","responsavel":"Rodolfo Bargeri","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-06","dataFechamento":"2026-07-14","sla":"Atendido","esforcoHoras":0.33,"duracaoHoras":3.22,"tempoInicioHoras":0.03,"horasAguardando":0.0},{"ticket":"1315249","assunto":null,"processo":"Empresarial | Tributos","modulo":"Documento Fiscal Entrada","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Philippe Abboud","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-07-01","dataFechamento":"2026-07-15","sla":"Atendido","esforcoHoras":0.58,"duracaoHoras":31.43,"tempoInicioHoras":25.57,"horasAguardando":0.0},{"ticket":"1313888","assunto":null,"processo":"Empresarial | Nota Fiscal Eletrônica - NFe","modulo":"NFe Comunicação - Envio/Retorno Xml","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-06-30","dataFechamento":"2026-07-10","sla":"Atendido","esforcoHoras":0.06,"duracaoHoras":0.37,"tempoInicioHoras":0.27,"horasAguardando":36.65},{"ticket":"1313851","assunto":null,"processo":"Empresarial | Materiais","modulo":"Conhecimento de Fretes","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Philippe Abboud","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-06-30","dataFechamento":"2026-07-14","sla":"Vencido","esforcoHoras":0.78,"duracaoHoras":32.28,"tempoInicioHoras":0.12,"horasAguardando":1.42},{"ticket":"1313809","assunto":null,"processo":"Empresarial | Nota Fiscal de Serviço Eletrônica - NFSe","modulo":"Emissão da NFS-e","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Philippe Abboud","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-06-30","dataFechamento":"2026-07-14","sla":"Atendido","esforcoHoras":0.75,"duracaoHoras":17.43,"tempoInicioHoras":15.65,"horasAguardando":0.0},{"ticket":"1313687","assunto":null,"processo":"Empresarial | Tributos","modulo":"Cálculo Imposto","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Philippe Abboud","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-06-30","dataFechamento":"2026-07-09","sla":"Atendido","esforcoHoras":0.91,"duracaoHoras":8.97,"tempoInicioHoras":7.85,"horasAguardando":0.0},{"ticket":"1313202","assunto":null,"processo":"Empresarial | Nota Fiscal de Serviço Eletrônica - NFSe","modulo":"Emissão da NFS-e","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-06-30","dataFechamento":"2026-07-01","sla":"Atendido","esforcoHoras":0.43,"duracaoHoras":1.07,"tempoInicioHoras":0.1,"horasAguardando":0.77},{"ticket":"1309241","assunto":null,"processo":"Empresarial | Global","modulo":"Parâmetros","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Matos","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-06-26","dataFechamento":"2026-07-06","sla":"Atendido","esforcoHoras":0.23,"duracaoHoras":2.07,"tempoInicioHoras":2.07,"horasAguardando":0.0},{"ticket":"1309200","assunto":null,"processo":"Empresarial | Materiais","modulo":"Pedidos de Compra","natureza":"Incidente","solicitante":"Paulo Oliveira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-06-26","dataFechamento":"2026-07-07","sla":"Atendido","esforcoHoras":0.25,"duracaoHoras":0.92,"tempoInicioHoras":0.08,"horasAguardando":8.3},{"ticket":"1304201","assunto":null,"processo":"Empresarial | Mega Atualizador","modulo":"Mega Atualizador","natureza":null,"solicitante":"Paulo Oliveira","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-06-23","dataFechamento":"2026-07-01","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.0,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1302000","assunto":null,"processo":"Empresarial | Nota Fiscal Eletrônica - NFe","modulo":"NFe Comunicação - Envio/Retorno Xml","natureza":"Incidente","solicitante":"Paulo Oliveira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-06-22","dataFechamento":"2026-07-01","sla":"Atendido","esforcoHoras":0.12,"duracaoHoras":7.78,"tempoInicioHoras":7.78,"horasAguardando":0.0},{"ticket":"1300303","assunto":null,"processo":"Empresarial | Materiais","modulo":"Solicitação","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Diego Almeida","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-06-19","dataFechamento":"2026-08-11","sla":"Vencido","esforcoHoras":0.08,"duracaoHoras":249.38,"tempoInicioHoras":249.37,"horasAguardando":14.95},{"ticket":"1300012","assunto":null,"processo":"Empresarial | Nota Fiscal de Serviço Eletrônica - NFSe","modulo":"Emissão da NFS-e","natureza":"Incidente","solicitante":"Romulo Pereira","responsavel":"Bruna Costa","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-06-19","dataFechamento":"2026-06-29","sla":"Atendido","esforcoHoras":1.35,"duracaoHoras":1.6,"tempoInicioHoras":0.85,"horasAguardando":0.0},{"ticket":"1290009","assunto":null,"processo":"Empresarial | Mega Atualizador","modulo":"Mega Atualizador","natureza":null,"solicitante":"Financeiro","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-06-12","dataFechamento":"2026-06-22","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.0,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1253370","assunto":null,"processo":"Empresarial | Mega Atualizador","modulo":"Mega Atualizador","natureza":null,"solicitante":"Financeiro","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-05-18","dataFechamento":"2026-05-26","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.0,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1243400","assunto":null,"processo":"Empresarial | Mega Atualizador","modulo":"Mega Atualizador","natureza":null,"solicitante":"Financeiro","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-05-12","dataFechamento":"2026-05-20","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.35,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1230135","assunto":null,"processo":"Empresarial | Mega Atualizador","modulo":"Mega Atualizador","natureza":null,"solicitante":"Financeiro","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-05-04","dataFechamento":"2026-05-12","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.0,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1224456","assunto":null,"processo":"Empresarial | Mega Atualizador","modulo":"Mega Atualizador","natureza":null,"solicitante":"Financeiro","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-04-28","dataFechamento":"2026-05-07","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.5,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1224454","assunto":null,"processo":"Empresarial | Mega Atualizador","modulo":"Mega Atualizador","natureza":null,"solicitante":"Financeiro","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-04-28","dataFechamento":"2026-05-07","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.0,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1206978","assunto":null,"processo":"Empresarial | Mega Atualizador","modulo":"Mega Atualizador","natureza":null,"solicitante":"Financeiro","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-04-14","dataFechamento":"2026-04-23","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.17,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1199136","assunto":null,"processo":"Empresarial | Mega Atualizador","modulo":"Mega Atualizador","natureza":null,"solicitante":"Financeiro","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-04-08","dataFechamento":"2026-04-16","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.0,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1199130","assunto":null,"processo":"Empresarial | Mega Atualizador","modulo":"Mega Atualizador","natureza":null,"solicitante":"Financeiro","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-04-08","dataFechamento":"2026-04-16","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.0,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1199125","assunto":null,"processo":"Empresarial | Mega Atualizador","modulo":"Mega Atualizador","natureza":null,"solicitante":"Financeiro","responsavel":"Mega Delivery","prioridade":"normal","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-04-08","dataFechamento":"2026-04-16","sla":null,"esforcoHoras":0.0,"duracaoHoras":0.02,"tempoInicioHoras":0.0,"horasAguardando":0.0},{"ticket":"1180136","assunto":null,"processo":"Construção | Contratos de Empreiteiros","modulo":"Contratos","natureza":"Serviço","solicitante":"Financeiro","responsavel":"Barbara Portela","prioridade":"baixa","status":"Fechado","statusGeral":"Fechado","dataAbertura":"2026-03-24","dataFechamento":"2026-04-09","sla":null,"esforcoHoras":0.65,"duracaoHoras":68.77,"tempoInicioHoras":45.2,"horasAguardando":24.0}];
+
+const STATUS_COLOR = { 'Fechado':'var(--good)', 'Resolvido':'var(--gold)', 'Aberto':'var(--info)' };
+const STATUS_BG    = { 'Fechado':'var(--good-bg)', 'Resolvido':'var(--gold-bg)', 'Aberto':'var(--info-bg)' };
+const REAL_STATUS_COLOR = { 'Fechado':'var(--good)', 'Resolvido':'var(--gold)', 'Aberto':'var(--info)', 'Em espera':'var(--critical)' };
+const REAL_STATUS_BG    = { 'Fechado':'var(--good-bg)', 'Resolvido':'var(--gold-bg)', 'Aberto':'var(--info-bg)', 'Em espera':'var(--critical-bg)' };
+const PRIORITY_META = {
+  'baixa':   { label:'Baixa',   color:'var(--good)' },
+  'normal':  { label:'Normal',  color:'var(--info)' },
+  'alta':    { label:'Alta',    color:'var(--serious)' },
+  'urgente': { label:'Urgente', color:'var(--critical)' }
+};
+const PRIORITY_ORDER = ['baixa','normal','alta','urgente'];
+const NATUREZA_COLOR = {
+  'Incidente':'var(--brand)', 'Erro Liberado':'var(--magenta)', 'Erro':'var(--serious)',
+  'Requisição (Dúvida)':'var(--info)', 'Serviço':'var(--teal)', '(Em branco)':'var(--neutral-fill)'
+};
+
+function resolveVar(v){
+  if (!v || !v.startsWith('var(')) return v;
+  return getComputedStyle(document.documentElement).getPropertyValue(v.slice(4,-1)).trim();
+}
+function fmtHoras(h){
+  if (h < 1) return Math.round(h*60) + ' min';
+  return h.toFixed(1).replace('.', ',') + ' h';
+}
+function fmtDate(iso){
+  if (!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+function pct(n, total){ return total ? Math.round(n/total*100) : 0; }
+
+// ---------- Theme ----------
+function toggleTheme(){
+  const root = document.documentElement;
+  const explicit = root.getAttribute('data-theme');
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const currentlyDark = explicit ? explicit === 'dark' : systemDark;
+  const next = currentlyDark ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  localStorage.setItem('dash-theme', next);
+  document.getElementById('themeToggle').innerHTML = next === 'dark' ? '☀️ Claro' : '🌙 Escuro';
+  renderAll();
+}
+(function initTheme(){
+  const saved = localStorage.getItem('dash-theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+  const effectiveDark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('themeToggle').innerHTML = effectiveDark ? '☀️ Claro' : '🌙 Escuro';
+  });
+})();
+
+// ---------- Data range & filter population ----------
+const ALL_DATES = TICKETS.map(t => t.dataAbertura).sort();
+const MIN_DATE = ALL_DATES[0];
+const MAX_DATE = ALL_DATES[ALL_DATES.length - 1];
+
+function uniqueSorted(arr, keyFn){ return [...new Set(arr.map(keyFn).filter(Boolean))].sort(); }
+
+function populateFilters(){
+  document.getElementById('fDateFrom').value = MIN_DATE;
+  document.getElementById('fDateFrom').min = MIN_DATE;
+  document.getElementById('fDateFrom').max = MAX_DATE;
+  document.getElementById('fDateTo').value = MAX_DATE;
+  document.getElementById('fDateTo').min = MIN_DATE;
+  document.getElementById('fDateTo').max = MAX_DATE;
+
+  const fill = (id, values, labelFn) => {
+    const sel = document.getElementById(id);
+    values.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v; opt.textContent = labelFn ? labelFn(v) : v;
+      sel.appendChild(opt);
+    });
+  };
+  fill('fProcesso', uniqueSorted(TICKETS, t => t.processo));
+  fill('fModulo', uniqueSorted(TICKETS, t => t.modulo));
+  fill('fResponsavel', uniqueSorted(TICKETS, t => t.responsavel));
+  fill('fSolicitante', uniqueSorted(TICKETS, t => t.solicitante));
+
+  ['fStatus','filterStatusFull'].forEach(id => {
+    const sel = document.getElementById(id);
+    ['Aberto','Fechado'].forEach(s => {
+      const opt = document.createElement('option'); opt.value = s; opt.textContent = s;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+function getFiltered(){
+  const from = document.getElementById('fDateFrom').value;
+  const to = document.getElementById('fDateTo').value;
+  const status = document.getElementById('fStatus').value;
+  const processo = document.getElementById('fProcesso').value;
+  const modulo = document.getElementById('fModulo').value;
+  const responsavel = document.getElementById('fResponsavel').value;
+  const solicitante = document.getElementById('fSolicitante').value;
+
+  return TICKETS.filter(t => {
+    if (from && t.dataAbertura < from) return false;
+    if (to && t.dataAbertura > to) return false;
+    if (status && t.statusGeral !== status) return false;
+    if (processo && t.processo !== processo) return false;
+    if (modulo && t.modulo !== modulo) return false;
+    if (responsavel && t.responsavel !== responsavel) return false;
+    if (solicitante && t.solicitante !== solicitante) return false;
+    return true;
+  });
+}
+
+// ---------- Aggregation helpers ----------
+function groupCount(arr, keyFn){
+  const m = new Map();
+  arr.forEach(x => { const k = keyFn(x); m.set(k, (m.get(k)||0)+1); });
+  return m;
+}
+function topN(map, n, otherLabel){
+  const entries = [...map.entries()].sort((a,b)=>b[1]-a[1]);
+  if (entries.length <= n) return entries;
+  const top = entries.slice(0,n);
+  const rest = entries.slice(n).reduce((s,e)=>s+e[1],0);
+  if (rest > 0) top.push([otherLabel||'Outros', rest]);
+  return top;
+}
+
+// ---------- KPI ----------
+function renderKPIs(list){
+  const total = list.length;
+  const abertosCount = list.filter(t=>t.statusGeral==='Aberto').length;
+  const fechados = list.filter(t=>t.statusGeral==='Fechado').length;
+  const esforcoTotal = list.reduce((s,t)=>s+t.esforcoHoras,0);
+
+  const kpis = [
+    { icon:'📋', color:'var(--brand)', bg:'var(--brand-soft)', value: total, label:'Total de Chamados', sub:'100% do total' },
+    { icon:'📂', color:'var(--info)', bg:'var(--info-bg)', value: abertosCount, label:'Abertos', sub:`${pct(abertosCount,total)}%` },
+    { icon:'✅', color:'var(--good)', bg:'var(--good-bg)', value: fechados, label:'Fechados', sub:`${pct(fechados,total)}%` },
+    { icon:'⏱️', color:'var(--brand-2)', bg:'var(--brand-soft)', value: fmtHoras(esforcoTotal), label:'Esforço Total', sub:'apontadas pela Senior' },
+  ];
+
+  document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
+    <div class="kpi">
+      <div class="top">
+        <div class="icon" style="background:${resolveVar(k.bg)}">${k.icon}</div>
+        <div class="value" style="color:${resolveVar(k.color)}">${k.value}</div>
+      </div>
+      <div class="label">${k.label}</div>
+      <div class="sub">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+// ---------- Donut generic ----------
+function polarToCartesian(cx,cy,r,angleDeg){
+  const a=(angleDeg-90)*Math.PI/180;
+  return { x: cx+r*Math.cos(a), y: cy+r*Math.sin(a) };
+}
+function describeArc(cx,cy,r,startAngle,endAngle){
+  const start = polarToCartesian(cx,cy,r,endAngle);
+  const end = polarToCartesian(cx,cy,r,startAngle);
+  const largeArc = endAngle-startAngle <= 180 ? 0 : 1;
+  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y}`;
+}
+function renderDonut(svgId, legendId, segments, total, centerLabel){
+  const cx=60, cy=60, r=42, sw=20;
+  let angle=0;
+  const paths = segments.map(s => {
+    if (s.n <= 0) return '';
+    const sweep = s.n/total*360;
+    const gap = segments.filter(x=>x.n>0).length > 1 ? 2 : 0;
+    const startA = angle+gap/2, endA = angle+sweep-gap/2;
+    angle += sweep;
+    if (endA<=startA) return '';
+    return `<path d="${describeArc(cx,cy,r,startA,endA)}" fill="none" stroke="${resolveVar(s.color)}" stroke-width="${sw}" stroke-linecap="round"/>`;
+  }).join('');
+  document.getElementById(svgId).innerHTML = `
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${resolveVar('var(--gridline)')}" stroke-width="${sw}"/>
+    ${paths}
+    <text x="${cx}" y="${cy-2}" text-anchor="middle" font-size="18" font-weight="800" fill="${resolveVar('var(--text-primary)')}" font-family="system-ui,sans-serif">${total}</text>
+    <text x="${cx}" y="${cy+13}" text-anchor="middle" font-size="8.5" fill="${resolveVar('var(--muted)')}" font-family="system-ui,sans-serif">${centerLabel||'chamados'}</text>
+  `;
+  document.getElementById(legendId).innerHTML = segments.filter(s=>s.n>0).map(s => `
+    <div class="legend-item">
+      <span class="sw" style="background:${resolveVar(s.color)}"></span>
+      <span class="name">${s.label}</span>
+      <span class="n">${s.n}</span>
+      <span class="pct">${pct(s.n,total)}%</span>
+    </div>
+  `).join('');
+}
+
+function renderStatusDonut(list){
+  const total = list.length;
+  const fechadosCount = list.filter(t=>t.status==='Fechado').length;
+  const resolvidosCount = list.filter(t=>t.status==='Resolvido').length;
+  const abertoTotal = total - fechadosCount - resolvidosCount;
+  const segments = [
+    { label:'Fechado', n: list.filter(t=>t.status==='Fechado').length, color:'var(--good)' },
+    { label:'Resolvido', n: list.filter(t=>t.status==='Resolvido').length, color:'var(--gold)' },
+    { label:'Aberto', n: abertoTotal, color:'var(--info)' },
+  ];
+  renderDonut('statusDonut','statusLegend', segments, total, 'chamados');
+}
+
+// ---------- Status dos chamados abertos (dados do Sênior) ----------
+function renderStatusAbertosDonut(list){
+  const abertos = list.filter(t => t.statusGeral === 'Aberto');
+  const total = abertos.length;
+  const abertoCount = abertos.filter(t=>t.status==='Aberto').length;
+  const resolvidoCount = abertos.filter(t=>t.status==='Resolvido').length;
+  const emEsperaCount = abertos.filter(t=>t.status==='Em espera').length;
+  const outrosCount = total - abertoCount - resolvidoCount - emEsperaCount;
+  const segments = [
+    { label:'Aberto', n: abertoCount, color:'var(--info)' },
+    { label:'Resolvido', n: resolvidoCount, color:'var(--gold)' },
+    { label:'Em espera', n: emEsperaCount, color:'var(--critical)' },
+    { label:'Outros', n: outrosCount, color:'var(--neutral-fill)' },
+  ];
+  renderDonut('statusAbertosDonut','statusAbertosLegend', segments, total, 'abertos');
+}
+
+// ---------- Horizontal bars ----------
+function renderHBars(containerId, rows){
+  const max = Math.max(...rows.map(r=>r.value), 1);
+  document.getElementById(containerId).innerHTML = rows.map(r => `
+    <div class="barrow">
+      <div class="lbl" title="${r.label}">${r.label}</div>
+      <div class="track"><div class="fill" style="width:${Math.max(r.value/max*100,3)}%; background:${resolveVar(r.color)}"></div></div>
+      <div class="val">${r.value}</div>
+    </div>
+  `).join('');
+}
+
+function renderPriorityBars(list){
+  const rows = PRIORITY_ORDER.map(p => ({ label: PRIORITY_META[p].label, value: list.filter(t=>t.prioridade===p).length, color: PRIORITY_META[p].color }));
+  renderHBars('prioBars', rows);
+}
+function renderModuloBars(list){
+  const map = groupCount(list, t=>t.modulo);
+  const rows = topN(map,5).map(([label,value])=>({label,value,color:'var(--brand)'}));
+  renderHBars('moduloBars', rows);
+}
+function renderNaturezaBars(list){
+  const map = groupCount(list, t=>t.natureza || '(Em branco)');
+  const rows = topN(map,6).map(([label,value])=>({label,value,color: NATUREZA_COLOR[label] || 'var(--neutral-fill)'}));
+  renderHBars('naturezaBars', rows);
+}
+
+// ---------- Vertical bars (processo) ----------
+function renderProcessoVBars(list){
+  const map = groupCount(list, t => t.processo.replace(/^.*?\|\s*/,''));
+  const rows = topN(map,5);
+  const max = Math.max(...rows.map(r=>r[1]),1);
+  document.getElementById('processoVBars').innerHTML = rows.map(([label,value]) => `
+    <div class="vbar-col">
+      <div class="vbar-stack">
+        <div class="vbar" style="height:${Math.max(value/max*100,6)}%; background:${resolveVar('var(--brand)')}">
+          <div class="vval">${value}</div>
+        </div>
+      </div>
+      <div class="vbar-label" title="${label}">${label}</div>
+    </div>
+  `).join('');
+}
+
+// ---------- Trend chart ----------
+function isoWeekStart(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const day = (d.getDay()+6)%7;
+  d.setDate(d.getDate()-day);
+  return d.toISOString().slice(0,10);
+}
+let TREND_DATA = null;
+function renderTrend(list){
+  if (list.length === 0) {
+    TREND_DATA = null;
+    document.getElementById('trendSvg').innerHTML = '';
+    document.getElementById('trendMin').textContent = '';
+    document.getElementById('trendMax').textContent = '';
+    return;
+  }
+  const buckets = new Map();
+  list.forEach(t => {
+    const key = isoWeekStart(t.dataAbertura);
+    buckets.set(key, (buckets.get(key)||0)+1);
+  });
+  const keys = [...buckets.keys()].sort();
+  const values = keys.map(k=>buckets.get(k));
+  const max = Math.max(...values,1);
+  const W=300,H=150,pad=8;
+  const stepX = keys.length>1 ? (W-2*pad)/(keys.length-1) : 0;
+  const points = values.map((v,i)=>{
+    const x = pad + i*stepX;
+    const y = H-pad - (v/max)*(H-2*pad-16);
+    return [x,y];
+  });
+  const linePath = points.map((p,i)=> (i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const areaPath = linePath + ` L ${points[points.length-1][0].toFixed(1)},${H-pad} L ${points[0][0].toFixed(1)},${H-pad} Z`;
+  const gridLines = [0.25,0.5,0.75].map(f => {
+    const y = H-pad-f*(H-2*pad-16);
+    return `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="${resolveVar('var(--gridline)')}" stroke-width="1"/>`;
+  }).join('');
+  const lastPoint = points[points.length-1];
+  document.getElementById('trendSvg').innerHTML = `
+    <defs>
+      <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${resolveVar('var(--brand)')}" stop-opacity="0.28"/>
+        <stop offset="100%" stop-color="${resolveVar('var(--brand)')}" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    ${gridLines}
+    <path d="${areaPath}" fill="url(#trendGrad)"/>
+    <path d="${linePath}" fill="none" stroke="${resolveVar('var(--brand)')}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${lastPoint[0]}" cy="${lastPoint[1]}" r="3.5" fill="${resolveVar('var(--brand)')}" stroke="${resolveVar('var(--surface-1)')}" stroke-width="2"/>
+    <g id="trendHover" style="display:none;">
+      <line x1="0" y1="${pad}" x2="0" y2="${H-pad}" stroke="${resolveVar('var(--muted)')}" stroke-width="1" stroke-dasharray="3,3"/>
+      <circle r="4" fill="${resolveVar('var(--brand)')}" stroke="${resolveVar('var(--surface-1)')}" stroke-width="2"/>
+    </g>
+  `;
+  TREND_DATA = { keys, values, points, W, H };
+  document.getElementById('trendMin').textContent = fmtDate(keys[0]);
+  document.getElementById('trendMax').textContent = fmtDate(keys[keys.length-1]);
+}
+
+// ---------- Mini tables ----------
+function renderMiniTable(containerId, map, total, colLabel){
+  const rows = topN(map,5);
+  const shown = rows.reduce((s,r)=>s+r[1],0);
+  document.getElementById(containerId).innerHTML = `
+    <thead><tr><th>${colLabel}</th><th class="num">Chamados</th><th class="num">%</th></tr></thead>
+    <tbody>
+      ${rows.map(([label,value]) => `<tr><td title="${label}">${label}</td><td class="num">${value}</td><td class="num">${pct(value,total)}%</td></tr>`).join('')}
+      <tr class="total-row"><td>Total</td><td class="num">${total}</td><td class="num">100%</td></tr>
+    </tbody>
+  `;
+}
+
+// ---------- Abertos table + alert ----------
+function daysSince(iso){
+  const d = new Date(iso+'T00:00:00');
+  const now = new Date();
+  return Math.floor((now-d)/86400000);
+}
+function fmtDiasAberto(dias){
+  if (dias == null) return '<span style="color:var(--muted)">—</span>';
+  return dias === 1 ? '1 dia' : `${dias} dias`;
+}
+TICKETS.forEach(t => { t.diasAberto = t.statusGeral === 'Aberto' ? daysSince(t.dataAbertura) : null; });
+function slaPillHtml(sla){
+  if (!sla) return '<span style="color:var(--muted)">—</span>';
+  if (sla === 'Atendido') return `<span class="pill" style="color:${resolveVar('var(--good)')};background:${resolveVar('var(--good-bg)')}"><span class="dot" style="background:${resolveVar('var(--good)')}"></span>Atendido</span>`;
+  if (sla === 'Vencido') return `<span class="pill" style="color:${resolveVar('var(--critical)')};background:${resolveVar('var(--critical-bg)')}"><span class="dot" style="background:${resolveVar('var(--critical)')}"></span>Vencido</span>`;
+  return `<span class="pill" style="color:${resolveVar('var(--muted)')};background:${resolveVar('var(--neutral-bg)')}">${sla}</span>`;
+}
+const PRIORITY_WEIGHT = { 'baixa':1, 'normal':2, 'alta':3, 'urgente':4 };
+function riscoScore(t){
+  const peso = PRIORITY_WEIGHT[t.prioridade] || 1;
+  return (t.sla==='Vencido' ? 1000 : 0) + peso*10 + (t.diasAberto||0);
+}
+function renderAbertos(list){
+  const abertos = list.filter(t=>t.statusGeral==='Aberto').sort((a,b)=>riscoScore(b)-riscoScore(a));
+  const top = abertos.slice(0,6);
+  const tbody = document.querySelector('#tblRiscoAbertos tbody');
+  if (abertos.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px 0;">Nenhum chamado em aberto no período filtrado.</td></tr>`;
+  } else {
+    tbody.innerHTML = top.map(t => {
+      const prio = PRIORITY_META[t.prioridade] || { label:t.prioridade, color:'var(--muted)' };
+      return `
+      <tr data-ticket="${t.ticket}">
+        <td>#${t.ticket}</td>
+        <td><span class="pill" style="color:${resolveVar(prio.color)};background:${resolveVar('var(--surface-2)')}">${prio.label}</span></td>
+        <td>${slaPillHtml(t.sla)}</td>
+        <td class="num">${fmtDiasAberto(t.diasAberto)}</td>
+        <td>${t.responsavel}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  const overdue = abertos.filter(t => (t.prioridade==='alta'||t.prioridade==='urgente') && (t.diasAberto||0) > 28);
+  const slot = document.getElementById('alertSlot');
+  if (overdue.length > 0){
+    slot.innerHTML = `
+      <div class="alert-bar">
+        <span class="ic">⚠️</span>
+        <span><b>${overdue.length}</b> chamado${overdue.length>1?'s':''} de prioridade alta/urgente vencido${overdue.length>1?'s':''} há mais de 28 dias.</span>
+        <a id="verDetalhesLink">Ver detalhes</a>
+      </div>`;
+    document.getElementById('verDetalhesLink').addEventListener('click', () => {
+      document.querySelector('details.full-list').open = true;
+      document.getElementById('searchInput').value = '';
+      document.getElementById('filterStatusFull').value = '';
+      renderFullTable(CURRENT_LIST);
+      overdue.forEach(t => {
+        const row = document.querySelector(`#fullTable tr[data-ticket="${t.ticket}"]`);
+        if (row){ row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash'); row.scrollIntoView({behavior:'smooth', block:'center'}); }
+      });
+    });
+  } else {
+    slot.innerHTML = abertos.length ? `<div class="alert-none">✓ Nenhum chamado prioritário vencido há mais de 28 dias.</div>` : '';
+  }
+}
+
+// ---------- Indicadores de tempo ----------
+function renderTempoGrid(list){
+  const n = list.length;
+  const totalDur = list.reduce((s,t)=>s+t.duracaoHoras,0);
+  const totalWait = list.reduce((s,t)=>s+t.horasAguardando,0);
+  const tiles = [
+    { n: totalDur.toFixed(0)+' h', l:'Tempo Total de Atendimento' },
+    { n: totalWait.toFixed(0)+' h', l:'Tempo Total Aguardando Retorno' },
+    { n: fmtHoras(n?totalDur/n:0), l:'Média de Atendimento por Chamado' },
+    { n: fmtHoras(n?totalWait/n:0), l:'Média Aguardando Retorno' },
+  ];
+  document.getElementById('tempoGrid').innerHTML = tiles.map(t => `<div class="stat-tile"><div class="n">${t.n}</div><div class="l">${t.l}</div></div>`).join('');
+}
+
+// ---------- Insights ----------
+function cumulativeCoverage(map, total, threshold){
+  const entries = [...map.entries()].sort((a,b)=>b[1]-a[1]);
+  let sum=0, count=0;
+  for (const [,v] of entries){ sum+=v; count++; if (sum/total >= threshold) break; }
+  return { count, pct: pct(sum,total) };
+}
+function renderInsights(list){
+  const total = list.length;
+  if (total === 0){
+    document.getElementById('insightsList').innerHTML = '<div class="insight-item">Nenhum chamado no período/filtro selecionado.</div>';
+    return;
+  }
+  const bySolic = groupCount(list, t=>t.solicitante);
+  const byProc = groupCount(list, t=>t.processo);
+  const byModulo = groupCount(list, t=>t.modulo);
+
+  const solicCov = cumulativeCoverage(bySolic, total, 0.6);
+  const procCov = cumulativeCoverage(byProc, total, 0.6);
+  const topProcShort = [...byProc.entries()].sort((a,b)=>b[1]-a[1])[0];
+  const topModulo = [...byModulo.entries()].sort((a,b)=>b[1]-a[1])[0];
+  const leaderBoth = topProcShort && topModulo && topProcShort[0].replace(/^.*?\|\s*/,'') === topModulo[0];
+
+  const slaBase = list.filter(t=>t.sla==='Atendido'||t.sla==='Vencido');
+  const slaOk = list.filter(t=>t.sla==='Atendido').length;
+  const slaPct = slaBase.length ? Math.round(slaOk/slaBase.length*100) : 0;
+
+  const abertos = list.filter(t=>t.statusGeral==='Aberto');
+  const abertosVencidos = abertos.filter(t=>t.sla==='Vencido').length;
+
+  const items = [
+    `<b>${solicCov.pct}%</b> dos chamados são abertos por apenas <b>${solicCov.count}</b> solicitante${solicCov.count>1?'s':''}.`,
+    `<b>${procCov.pct}%</b> dos chamados estão concentrados em <b>${procCov.count}</b> processo${procCov.count>1?'s':''}.`,
+    leaderBoth
+      ? `O módulo <b>${topModulo[0]}</b> lidera tanto em processos quanto em módulos, com <b>${topModulo[1]}</b> chamados.`
+      : `O processo <b>${topProcShort[0].replace(/^.*?\|\s*/,'')}</b> concentra o maior volume, com <b>${topProcShort[1]}</b> chamados.`,
+    `<b>${slaPct}%</b> de SLA atendido (considerando apenas chamados com classificação válida).`,
+    `<b>${abertos.length}</b> chamado${abertos.length!==1?'s':''} ${abertos.length!==1?'estão':'está'} aberto${abertos.length!==1?'s':''}, sendo <b>${abertosVencidos}</b> com SLA vencido.`,
+  ];
+  document.getElementById('insightsList').innerHTML = items.map(t=>`<div class="insight-item">${t}</div>`).join('');
+}
+
+// ---------- Full searchable list ----------
+let sortState = { key:'dataAbertura', dir:-1 };
+function applyFullFilters(list){
+  const s = (document.getElementById('searchInput').value||'').toLowerCase();
+  const status = document.getElementById('filterStatusFull').value;
+  return list.filter(t => {
+    if (status && t.statusGeral !== status) return false;
+    if (s){
+      const hay = [t.ticket,t.assunto,t.solicitante,t.responsavel,t.processo,t.modulo].filter(Boolean).join(' ').toLowerCase();
+      if (!hay.includes(s)) return false;
+    }
+    return true;
+  });
+}
+function sortRows(rows){
+  const { key, dir } = sortState;
+  return [...rows].sort((a,b) => {
+    let av=a[key], bv=b[key];
+    if (key==='diasAberto'){ av=av==null?-1:av; bv=bv==null?-1:bv; }
+    if (av==null) av=''; if (bv==null) bv='';
+    if (key==='ticket'){ av=+av; bv=+bv; }
+    if (av<bv) return -1*dir; if (av>bv) return 1*dir; return 0;
+  });
+}
+function renderFullTable(baseList){
+  const filtered = sortRows(applyFullFilters(baseList));
+  document.getElementById('tableCount').textContent = `${filtered.length} de ${baseList.length} chamados (no período filtrado)`;
+  document.getElementById('fullListCount').textContent = `(${baseList.length} no período filtrado)`;
+  document.querySelector('#fullTable tbody').innerHTML = filtered.map(t => {
+    const statusMeta = { color: STATUS_COLOR[t.statusGeral]||'var(--muted)', bg: STATUS_BG[t.statusGeral]||'var(--neutral-bg)' };
+    const prio = PRIORITY_META[t.prioridade] || { label:t.prioridade, color:'var(--muted)' };
+    const assuntoHtml = t.assunto ? t.assunto : `<span class="no-subject">Assunto não informado</span><span class="fallback">${t.processo} — ${t.modulo}</span>`;
+    return `<tr data-ticket="${t.ticket}">
+      <td>#${t.ticket}</td>
+      <td>${assuntoHtml}</td>
+      <td><span class="pill" style="color:${resolveVar(statusMeta.color)};background:${resolveVar(statusMeta.bg)}"><span class="dot" style="background:${resolveVar(statusMeta.color)}"></span>${t.statusGeral}</span></td>
+      <td><span class="pill" style="color:${resolveVar(prio.color)};background:${resolveVar('var(--surface-2)')}">${prio.label}</span></td>
+      <td>${t.processo}</td>
+      <td>${t.modulo}</td>
+      <td>${t.solicitante}</td>
+      <td>${t.responsavel}</td>
+      <td>${fmtDate(t.dataAbertura)}</td>
+      <td>${fmtDate(t.dataFechamento)}</td>
+      <td>${fmtDiasAberto(t.diasAberto)}</td>
+      <td>${slaPillHtml(t.sla)}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:20px;">Nenhum chamado encontrado.</td></tr>`;
+}
+
+// ---------- Master render ----------
+let CURRENT_LIST = TICKETS;
+function renderAll(){
+  CURRENT_LIST = getFiltered();
+  renderKPIs(CURRENT_LIST);
+  renderStatusDonut(CURRENT_LIST);
+  renderStatusAbertosDonut(CURRENT_LIST);
+  renderPriorityBars(CURRENT_LIST);
+  renderProcessoVBars(CURRENT_LIST);
+  renderModuloBars(CURRENT_LIST);
+  renderTrend(CURRENT_LIST);
+  renderNaturezaBars(CURRENT_LIST);
+  renderMiniTable('tblSolicitantes', groupCount(CURRENT_LIST,t=>t.solicitante), CURRENT_LIST.length, 'Solicitante');
+  renderMiniTable('tblResponsaveis', groupCount(CURRENT_LIST,t=>t.responsavel), CURRENT_LIST.length, 'Responsável');
+  renderAbertos(CURRENT_LIST);
+  renderTempoGrid(CURRENT_LIST);
+  renderInsights(CURRENT_LIST);
+  renderFullTable(CURRENT_LIST);
+}
+
+function wireEvents(){
+  ['fDateFrom','fDateTo','fStatus','fProcesso','fModulo','fResponsavel','fSolicitante'].forEach(id => {
+    document.getElementById(id).addEventListener('change', renderAll);
+  });
+  document.getElementById('btnReset').addEventListener('click', () => {
+    document.getElementById('fDateFrom').value = MIN_DATE;
+    document.getElementById('fDateTo').value = MAX_DATE;
+    document.getElementById('fStatus').value = '';
+    document.getElementById('fProcesso').value = '';
+    document.getElementById('fModulo').value = '';
+    document.getElementById('fResponsavel').value = '';
+    document.getElementById('fSolicitante').value = '';
+    renderAll();
+  });
+  document.getElementById('searchInput').addEventListener('input', () => renderFullTable(CURRENT_LIST));
+  document.getElementById('filterStatusFull').addEventListener('change', () => renderFullTable(CURRENT_LIST));
+  document.querySelectorAll('#fullTable thead th[data-key]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.getAttribute('data-key');
+      if (sortState.key === key) sortState.dir *= -1; else { sortState.key = key; sortState.dir = 1; }
+      renderFullTable(CURRENT_LIST);
+    });
+  });
+
+  const trendSvg = document.getElementById('trendSvg');
+  const trendTooltip = document.getElementById('trendTooltip');
+  trendSvg.addEventListener('mousemove', (e) => {
+    if (!TREND_DATA || TREND_DATA.points.length === 0) return;
+    const rect = trendSvg.getBoundingClientRect();
+    const relX = (e.clientX - rect.left) / rect.width * TREND_DATA.W;
+    let nearest = 0, minDist = Infinity;
+    TREND_DATA.points.forEach((p,i) => {
+      const d = Math.abs(p[0]-relX);
+      if (d < minDist){ minDist = d; nearest = i; }
+    });
+    const [px,py] = TREND_DATA.points[nearest];
+    const hoverGroup = document.getElementById('trendHover');
+    hoverGroup.style.display = '';
+    hoverGroup.querySelector('line').setAttribute('x1', px);
+    hoverGroup.querySelector('line').setAttribute('x2', px);
+    hoverGroup.querySelector('circle').setAttribute('cx', px);
+    hoverGroup.querySelector('circle').setAttribute('cy', py);
+
+    const key = TREND_DATA.keys[nearest];
+    const val = TREND_DATA.values[nearest];
+    const ordinal = nearest+1;
+    trendTooltip.innerHTML = `<b>${ordinal}ª Semana dos Chamados</b><span style="color:var(--muted); font-size:10px; display:block; margin-bottom:3px;">a partir de ${fmtDate(key)}</span>${val} chamado${val!==1?'s':''} aberto${val!==1?'s':''}`;
+    trendTooltip.style.display = 'block';
+    const cardRect = trendSvg.closest('.card').getBoundingClientRect();
+    trendTooltip.style.left = (e.clientX - cardRect.left) + 'px';
+    trendTooltip.style.top = (e.clientY - cardRect.top - 10) + 'px';
+  });
+  trendSvg.addEventListener('mouseleave', () => {
+    trendTooltip.style.display = 'none';
+    const hoverGroup = document.getElementById('trendHover');
+    if (hoverGroup) hoverGroup.style.display = 'none';
+  });
+}
+
+document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+populateFilters();
+wireEvents();
+renderAll();
+</script>
+</body>
+</html>
