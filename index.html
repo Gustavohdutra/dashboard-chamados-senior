@@ -330,11 +330,11 @@
   <!-- Row 2: status / prioridade / processo / modulo -->
   <div class="row row-4">
     <div class="card">
-      <h3>Chamados por Status do Ticket</h3>
-      <div class="hint">Distribuição geral no período filtrado</div>
+      <h3>Status dos Chamados Abertos — Dados do Sênior</h3>
+      <div class="hint">Chamados com STATUS = Aberto, detalhados pela coluna Status do Ticket</div>
       <div class="donut-wrap">
-        <svg id="statusDonut" width="120" height="120" viewBox="0 0 120 120"></svg>
-        <div class="legend-col" id="statusLegend"></div>
+        <svg id="statusAbertosDonut" width="120" height="120" viewBox="0 0 120 120"></svg>
+        <div class="legend-col" id="statusAbertosLegend"></div>
       </div>
     </div>
     <div class="card">
@@ -355,7 +355,7 @@
   </div>
 
   <!-- Row 3: trend / natureza -->
-  <div class="row row-3">
+  <div class="row row-2">
     <div class="card" style="position:relative;">
       <h3>Chamados por Período de Abertura</h3>
       <div class="hint">Volume de abertura ao longo do tempo</div>
@@ -367,14 +367,6 @@
       <h3>Chamados por Natureza</h3>
       <div class="hint">Classificação técnica do chamado</div>
       <div class="bars" id="naturezaBars"></div>
-    </div>
-    <div class="card">
-      <h3>Status dos Chamados Abertos — Dados do Sênior</h3>
-      <div class="hint">Chamados com STATUS = Aberto, detalhados pela coluna Status do Ticket</div>
-      <div class="donut-wrap">
-        <svg id="statusAbertosDonut" width="120" height="120" viewBox="0 0 120 120"></svg>
-        <div class="legend-col" id="statusAbertosLegend"></div>
-      </div>
     </div>
   </div>
 
@@ -422,6 +414,13 @@
       <div class="full-filters">
         <div class="search-box">🔎 <input type="text" id="searchInput" placeholder="Buscar por ticket, assunto, solicitante ou responsável..."></div>
         <select id="filterStatusFull" class="filter-select"><option value="">Status: todos</option></select>
+        <select id="filterStatusSenior" class="filter-select">
+          <option value="">Status Sênior: todos</option>
+          <option value="Aberto">Aberto</option>
+          <option value="Resolvido">Resolvido</option>
+          <option value="Em espera">Em espera</option>
+          <option value="Outros">Outros</option>
+        </select>
         <span class="chip-count" id="tableCount"></span>
       </div>
       <div class="table-scroll">
@@ -647,19 +646,6 @@ function renderDonut(svgId, legendId, segments, total, centerLabel){
   `).join('');
 }
 
-function renderStatusDonut(list){
-  const total = list.length;
-  const fechadosCount = list.filter(t=>t.status==='Fechado').length;
-  const resolvidosCount = list.filter(t=>t.status==='Resolvido').length;
-  const abertoTotal = total - fechadosCount - resolvidosCount;
-  const segments = [
-    { label:'Fechado', n: list.filter(t=>t.status==='Fechado').length, color:'var(--good)' },
-    { label:'Resolvido', n: list.filter(t=>t.status==='Resolvido').length, color:'var(--gold)' },
-    { label:'Aberto', n: abertoTotal, color:'var(--info)' },
-  ];
-  renderDonut('statusDonut','statusLegend', segments, total, 'chamados');
-}
-
 // ---------- Status dos chamados abertos (dados do Sênior) ----------
 function renderStatusAbertosDonut(list){
   const abertos = list.filter(t => t.statusGeral === 'Aberto');
@@ -848,6 +834,7 @@ function renderAbertos(list){
       document.querySelector('details.full-list').open = true;
       document.getElementById('searchInput').value = '';
       document.getElementById('filterStatusFull').value = '';
+      document.getElementById('filterStatusSenior').value = '';
       renderFullTable(CURRENT_LIST);
       overdue.forEach(t => {
         const row = document.querySelector(`#fullTable tr[data-ticket="${t.ticket}"]`);
@@ -920,8 +907,17 @@ let sortState = { key:'dataAbertura', dir:-1 };
 function applyFullFilters(list){
   const s = (document.getElementById('searchInput').value||'').toLowerCase();
   const status = document.getElementById('filterStatusFull').value;
+  const statusSenior = document.getElementById('filterStatusSenior').value;
   return list.filter(t => {
     if (status && t.statusGeral !== status) return false;
+    if (statusSenior){
+      const ehAberto = t.statusGeral === 'Aberto';
+      if (statusSenior === 'Outros'){
+        if (!(ehAberto && !['Aberto','Resolvido','Em espera'].includes(t.status))) return false;
+      } else if (!ehAberto || t.status !== statusSenior){
+        return false;
+      }
+    }
     if (s){
       const hay = [t.ticket,t.assunto,t.solicitante,t.responsavel,t.processo,t.modulo].filter(Boolean).join(' ').toLowerCase();
       if (!hay.includes(s)) return false;
@@ -969,7 +965,6 @@ let CURRENT_LIST = TICKETS;
 function renderAll(){
   CURRENT_LIST = getFiltered();
   renderKPIs(CURRENT_LIST);
-  renderStatusDonut(CURRENT_LIST);
   renderStatusAbertosDonut(CURRENT_LIST);
   renderPriorityBars(CURRENT_LIST);
   renderProcessoVBars(CURRENT_LIST);
@@ -1000,6 +995,7 @@ function wireEvents(){
   });
   document.getElementById('searchInput').addEventListener('input', () => renderFullTable(CURRENT_LIST));
   document.getElementById('filterStatusFull').addEventListener('change', () => renderFullTable(CURRENT_LIST));
+  document.getElementById('filterStatusSenior').addEventListener('change', () => renderFullTable(CURRENT_LIST));
   document.querySelectorAll('#fullTable thead th[data-key]').forEach(th => {
     th.addEventListener('click', () => {
       const key = th.getAttribute('data-key');
